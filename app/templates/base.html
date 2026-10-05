@@ -6,39 +6,243 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light">
+
     <title>{% block title %}{{ t('app.nome') }}{% endblock %}</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E🍽️%3C/text%3E%3C/svg%3E">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <link rel="icon"
+          href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E🍽️%3C/text%3E%3C/svg%3E">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        /*
+         * Botão acessível para retornar ao topo.
+         * Mantido aqui para que a contribuição não dependa
+         * de alterações no CSS principal do projeto.
+         */
+        .botao-voltar-topo {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            z-index: 1000;
+
+            width: 48px;
+            height: 48px;
+
+            display: none;
+            align-items: center;
+            justify-content: center;
+
+            border: 2px solid currentColor;
+            border-radius: 50%;
+
+            background: #ffffff;
+            color: #222222;
+
+            font-size: 22px;
+            font-weight: bold;
+
+            cursor: pointer;
+
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+        }
+
+        .botao-voltar-topo:hover {
+            transform: translateY(-2px);
+        }
+
+        .botao-voltar-topo:focus-visible {
+            outline: 3px solid #000000;
+            outline-offset: 3px;
+        }
+
+        .botao-voltar-topo.visivel {
+            display: flex;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .botao-voltar-topo {
+                transition: none;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <a href="#conteudo" class="link-pular">{{ t('a11y.pular_para_conteudo') }}</a>
+
+    <a href="#conteudo" class="link-pular">
+        {{ t('a11y.pular_para_conteudo') }}
+    </a>
 
     <header class="topo">
         <div class="topo-interno">
-            <p class="marca"><a href="{{ url_for('menu.index') }}">{{ t('app.nome') }}</a></p>
+
+            <p class="marca">
+                <a href="{{ url_for('menu.index') }}">
+                    {{ t('app.nome') }}
+                </a>
+            </p>
+
             {% include "partials/_painel_acessibilidade.html" %}
+
         </div>
     </header>
 
     <main id="conteudo" tabindex="-1">
-        {% block content %}{% endblock %}
+        {% block content %}
+        {% endblock %}
     </main>
 
     <footer class="rodape">
-        <a href="{{ url_for('qrcode.pagina') }}">{{ t('qrcode.link_rodape') }}</a>
+
+        <a href="{{ url_for('qrcode.pagina') }}">
+            {{ t('qrcode.link_rodape') }}
+        </a>
+
     </footer>
 
-    {# Indicador visual dos comandos de voz (as mensagens para leitores de tela vão em #anuncios). #}
-    <div class="status-voz" data-voz-status hidden>
-        <span class="status-voz-icone" aria-hidden="true">🎤</span>
+
+    {# Botão acessível para retornar ao início da página. #}
+
+    <button
+        type="button"
+        id="botao-voltar-topo"
+        class="botao-voltar-topo"
+        aria-label="Voltar ao topo da página"
+        title="Voltar ao topo"
+        hidden
+    >
+        ↑
+    </button>
+
+
+    {#
+        Indicador visual dos comandos de voz.
+        As mensagens para leitores de tela vão em #anuncios.
+    #}
+
+    <div
+        class="status-voz"
+        data-voz-status
+        hidden
+    >
+        <span
+            class="status-voz-icone"
+            aria-hidden="true"
+        >
+            🎤
+        </span>
+
         <span data-voz-status-texto></span>
     </div>
 
-    {# Região única para confirmar ações a leitores de tela (fonte, contraste, voz...). #}
-    <div id="anuncios" class="apenas-leitor" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    {#
+        Região única para confirmar ações a leitores de tela
+        (fonte, contraste, voz...).
+    #}
+
+    <div
+        id="anuncios"
+        class="apenas-leitor"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+    ></div>
+
 
     {% block scripts %}
-    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <script
+        type="module"
+        src="{{ url_for('static', filename='js/main.js') }}">
+    </script>
+
     {% endblock %}
+
+
+    <script>
+        /*
+         * Controle do botão "Voltar ao topo".
+         *
+         * O botão aparece após o usuário rolar a página
+         * e permite retornar ao início de maneira acessível.
+         */
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const botaoVoltarTopo =
+                document.getElementById("botao-voltar-topo");
+
+            if (!botaoVoltarTopo) {
+                return;
+            }
+
+
+            function atualizarBotaoVoltarTopo() {
+
+                if (window.scrollY > 300) {
+
+                    botaoVoltarTopo.hidden = false;
+                    botaoVoltarTopo.classList.add("visivel");
+
+                } else {
+
+                    botaoVoltarTopo.hidden = true;
+                    botaoVoltarTopo.classList.remove("visivel");
+
+                }
+
+            }
+
+
+            botaoVoltarTopo.addEventListener("click", function () {
+
+                const reduzirMovimento =
+                    window.matchMedia(
+                        "(prefers-reduced-motion: reduce)"
+                    ).matches;
+
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: reduzirMovimento
+                        ? "auto"
+                        : "smooth"
+                });
+
+
+                /*
+                 * Após retornar ao topo, transfere o foco
+                 * para o conteúdo principal.
+                 */
+
+                const conteudo =
+                    document.getElementById("conteudo");
+
+                if (conteudo) {
+
+                    setTimeout(function () {
+                        conteudo.focus();
+                    }, reduzirMovimento ? 0 : 500);
+
+                }
+
+            });
+
+
+            window.addEventListener(
+                "scroll",
+                atualizarBotaoVoltarTopo,
+                { passive: true }
+            );
+
+
+            atualizarBotaoVoltarTopo();
+
+        });
+    </script>
+
 </body>
 </html>
