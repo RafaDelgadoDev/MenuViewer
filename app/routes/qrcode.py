@@ -5,6 +5,8 @@ import io
 import segno
 from flask import Blueprint, Response, current_app, render_template, request, url_for
 
+from app.i18n import traduzir
+
 qrcode_bp = Blueprint("qrcode", __name__)
 
 FORMATOS = {"svg": "image/svg+xml", "png": "image/png"}
@@ -34,12 +36,13 @@ def imagem(formato):
     escala = max(2, min(escala, 40))
     if formato == "svg":
         qr.save(buffer, kind="svg", scale=escala, border=4, xmldecl=False,
-                title="QR Code do cardápio", svgclass=None, lineclass=None)
+                title=traduzir("qrcode.titulo"), svgclass=None, lineclass=None)
     else:
         qr.save(buffer, kind="png", scale=escala, border=4)
 
     resposta = Response(buffer.getvalue(), mimetype=FORMATOS[formato])
     if request.args.get("download"):
         resposta.headers["Content-Disposition"] = f'attachment; filename="cardapio-qrcode.{formato}"'
+    resposta.vary.update(("Cookie", "Accept-Language"))
     resposta.cache_control.max_age = 3600
     return resposta
