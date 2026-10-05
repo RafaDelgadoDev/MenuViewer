@@ -32,6 +32,13 @@
 
     <p class="prato-descricao" data-descricao>{{ prato.descricao }}</p>
 
+    {# Começa oculto: ouvir.js só mostra se o navegador tiver síntese de voz. #}
+    <div class="prato-ouvir">
+        <button type="button" class="btn btn-ouvir" data-ouvir hidden aria-pressed="false">
+            <span aria-hidden="true">🔊</span> {{ t('prato.ouvir') }}<span class="apenas-leitor">: {{ prato.nome }}</span>
+        </button>
+    </div>
+
     {% set caracteristicas = [] %}
     {% if prato.vegano %}{% set _ = caracteristicas.append(('🌱', t('dieta.vegano'))) %}
     {% elif prato.vegetariano %}{% set _ = caracteristicas.append(('🥦', t('dieta.vegetariano'))) %}{% endif %}

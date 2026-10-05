@@ -143,8 +143,30 @@ def test_pratos_agrupados_semanticamente(pagina):
 def test_ordem_do_dom_segue_a_leitura_do_card(pagina):
     prato = pagina("/").select_one("#prato-1")
     ordem = [el.get("class", [""])[0] or el.name for el in prato.find_all(recursive=False)]
-    assert ordem == ["prato-cabecalho", "prato-foto", "prato-descricao", "prato-tags",
-                     "prato-alergenos", "prato-ingredientes"]
+    assert ordem == ["prato-cabecalho", "prato-foto", "prato-descricao", "prato-ouvir",
+                     "prato-tags", "prato-alergenos", "prato-ingredientes"]
+
+
+def test_cada_prato_tem_botao_ouvir(pagina, client):
+    """O botão fica no HTML, oculto até o JS confirmar a síntese de voz."""
+    soup = pagina("/")
+    pratos = soup.select("article.prato")
+    assert pratos
+    for prato in pratos:
+        botao = prato.select_one("[data-ouvir]")
+        assert botao.name == "button" and botao["type"] == "button"
+        assert botao.has_attr("hidden")
+        assert botao["aria-pressed"] == "false"
+        assert prato["data-nome"] in botao.get_text(" ", strip=True)
+        assert "Ouvir" in botao.get_text(" ", strip=True)
+
+    client.post("/preferencias", data={"acao": "idioma", "valor": "en"})
+    ingles = pagina("/").select_one("#prato-1 [data-ouvir]").get_text(" ", strip=True)
+    assert "Listen" in ingles and "Bruschetta" in ingles
+
+    client.post("/preferencias", data={"acao": "idioma", "valor": "es"})
+    espanhol = pagina("/").select_one("#prato-1 [data-ouvir]").get_text(" ", strip=True)
+    assert "Escuchar" in espanhol and "Bruschetta" in espanhol
 
 
 def test_foto_preserva_descricao_e_botao_de_ampliar_tem_texto(pagina):
