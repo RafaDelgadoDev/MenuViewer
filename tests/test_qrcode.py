@@ -1,6 +1,7 @@
 import io
 
 import segno
+import pytest
 
 
 def test_pagina_do_qrcode(pagina):
@@ -37,3 +38,24 @@ def test_usa_url_publica_configurada(app, client):
 
 def test_formato_invalido(client):
     assert client.get("/qrcode.gif").status_code == 404
+
+
+@pytest.mark.parametrize("idioma,titulo", [
+    ("pt", "QR Code do cardápio"),
+    ("en", "Menu QR code"),
+    ("es", "Código QR del menú"),
+])
+def test_titulo_svg_acompanha_idioma(client, idioma, titulo):
+    from xml.etree import ElementTree
+
+    resposta = client.get("/qrcode.svg", headers={"Accept-Language": idioma})
+    svg = ElementTree.fromstring(resposta.data)
+    assert svg.find("{http://www.w3.org/2000/svg}title").text == titulo
+    assert "Accept-Language" in resposta.vary
+    assert "Cookie" in resposta.vary
+
+
+def test_titulo_svg_respeita_idioma_do_cookie(client, definir_prefs):
+    definir_prefs(idioma="es")
+    resposta = client.get("/qrcode.svg", headers={"Accept-Language": "en"})
+    assert "Código QR del menú" in resposta.get_data(as_text=True)
