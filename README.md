@@ -109,7 +109,7 @@ Veja [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md). Toda ajuda é bem-vinda, de c
 
 - [ ] Painel admin para o restaurante editar pratos e ingredientes
 - [ ] Tradução do conteúdo dos pratos (hoje só a interface é traduzida)
-- [ ] Botão "Ouvir" em cada prato, sem depender de voz (ver `future/text_to_speech`)
+- [x] Botão "Ouvir" em cada prato, sem depender de comando de voz (ver `future/text_to_speech`)
 - [ ] Fonte para dislexia (ex.: OpenDyslexic) como opção
 - [ ] Mais idiomas
 - [ ] Descrição em Libras (vídeo/avatar)

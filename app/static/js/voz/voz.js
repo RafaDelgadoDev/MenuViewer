@@ -10,6 +10,7 @@
 //   modo simplificado) via sessionStorage.
 import { anunciar } from "../anuncios.js";
 import { interpretar, prepararComandos } from "./interpretador.js";
+import { ligarBotoesOuvir, textoDoPrato } from "./ouvir.js";
 
 const CHAVE_SESSAO = "voz-ativa";
 
@@ -18,16 +19,18 @@ const Reconhecimento = window.SpeechRecognition || window.webkitSpeechRecognitio
 export function iniciarVoz() {
     const secao = document.querySelector("[data-voz]");
     const configEl = document.getElementById("voz-config");
-    if (!secao || !configEl) return;
+    let controle = null;
 
-    if (!Reconhecimento) {
+    if (secao && configEl && !Reconhecimento) {
         secao.querySelector("[data-voz-sem-suporte]").hidden = false;
-        return;
+    } else if (secao && configEl) {
+        const config = JSON.parse(configEl.textContent);
+        controle = new ControleVoz(config, secao);
+        controle.montar();
     }
 
-    const config = JSON.parse(configEl.textContent);
-    const controle = new ControleVoz(config, secao);
-    controle.montar();
+    // O botão Ouvir usa só a síntese de voz, então aparece mesmo sem microfone.
+    ligarBotoesOuvir(controle);
 }
 
 class ControleVoz {
@@ -45,6 +48,7 @@ class ControleVoz {
         this.ouvindo = false;
         this.pratoAtual = -1;
         this.reconhecimento = null;
+        this.geracaoFala = 0;
     }
 
     montar() {
@@ -273,12 +277,22 @@ class ControleVoz {
     lerDescricao(pratoId) {
         const el = this.alvo(pratoId);
         if (!el) return this.responder(this.msgs.sem_prato_selecionado);
-        const partes = [
-            formatar(this.msgs.prato_atual, { nome: el.dataset.nome, preco: precoDe(el) }),
-            el.querySelector("[data-descricao]")?.textContent.trim(),
-            el.querySelector("[data-alergenos]")?.textContent.replace(/\s+/g, " ").trim(),
-        ];
-        this.responder(partes.filter(Boolean).join(" "));
+        this.responder(textoDoPrato(el));
+    }
+
+    // O botão Ouvir fala por conta própria. Estas duas funções impedem que o
+    // microfone capture essa fala e que o fim da resposta anterior religue o microfone.
+    pausarParaFalaExterna() {
+        this.geracaoFala += 1;
+        this.falando = true;
+        this.pararDeOuvir();
+        window.speechSynthesis?.cancel();
+    }
+
+    retomarDepoisDeFalaExterna() {
+        if (!this.falando) return;
+        this.falando = false;
+        if (this.ativo) this.ouvir();
     }
 
     mostrarIngredientes(pratoId) {
@@ -314,9 +328,11 @@ class ControleVoz {
         this.pararDeOuvir();
         sintese.cancel();
 
+        const geracao = ++this.geracaoFala;
         const fala = new SpeechSynthesisUtterance(texto);
         fala.lang = this.config.idioma;
         const retomar = () => {
+            if (geracao !== this.geracaoFala) return;
             this.falando = false;
             if (this.ativo) this.ouvir();
         };

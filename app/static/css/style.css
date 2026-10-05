@@ -342,6 +342,7 @@ main {
     border-radius: calc(var(--raio) - 4px);
 }
 .btn-ampliar { margin-top: 0.5rem; width: 100%; }
+.btn-ouvir { width: 100%; }
 
 .prato-tags { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; padding: 0; }
 .tag {
